@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversational Browser Agent</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f8; margin: 0; }
+    #chat { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+    .msg { margin: 12px 0; }
+    .user { text-align: right; color: #2563eb; }
+    .agent { text-align: left; color: #111; }
+    #input { width: 80%; padding: 8px; }
+    #send { padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <div id="messages"></div>
+    <input id="input" type="text" placeholder="Enter a URL..." />
+    <button id="send">Send</button>
+  </div>
+  <script>
+    const ws = new WebSocket('ws://localhost:8000/ws/chat');
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const send = document.getElementById('send');
+
+    function addMessage(text, sender) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + sender;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    send.onclick = () => {
+      const value = input.value.trim();
+      if (value) {
+        addMessage(value, 'user');
+        ws.send(value);
+        input.value = '';
+      }
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') send.onclick();
+    });
+
+    ws.onmessage = (event) => {
+      addMessage(event.data, 'agent');
+    };
+    ws.onopen = () => {
+      addMessage('Connected to browser agent.', 'agent');
+    };
+    ws.onclose = () => {
+      addMessage('Disconnected.', 'agent');
+    };
+  </script>
+</body>
+</html> 

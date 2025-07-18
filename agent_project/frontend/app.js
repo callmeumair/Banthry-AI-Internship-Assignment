@@ -2,13 +2,33 @@ const ws = new WebSocket(`ws://${window.location.host}/ws`);
 const messages = document.getElementById('messages');
 const input = document.getElementById('input');
 const send = document.getElementById('send');
-const status = document.getElementById('status');
-const screenshot = document.getElementById('screenshot');
 
-function addMessage(text, sender) {
+function addBubble(text, sender) {
   const div = document.createElement('div');
-  div.className = 'msg ' + sender;
+  div.className = `bubble ${sender}`;
   div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function addScreenshotBubble(src, caption) {
+  const div = document.createElement('div');
+  div.className = 'screenshot-bubble agent';
+  const img = document.createElement('img');
+  img.className = 'screenshot-thumb';
+  img.src = src + '?' + Date.now();
+  img.alt = caption || 'Screenshot';
+  const ts = document.createElement('div');
+  ts.className = 'timestamp';
+  ts.textContent = new Date().toLocaleString();
+  if (caption) {
+    const cap = document.createElement('div');
+    cap.textContent = caption;
+    cap.style.marginBottom = '4px';
+    div.appendChild(cap);
+  }
+  div.appendChild(img);
+  div.appendChild(ts);
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -16,7 +36,7 @@ function addMessage(text, sender) {
 send.onclick = () => {
   const value = input.value.trim();
   if (value) {
-    addMessage(value, 'user');
+    addBubble(value, 'user');
     ws.send(value);
     input.value = '';
   }
@@ -30,28 +50,24 @@ ws.onmessage = (event) => {
   try {
     data = JSON.parse(event.data);
   } catch {
-    addMessage(event.data, 'agent');
+    addBubble(event.data, 'agent');
     return;
   }
-  if (data.status === 'ok') {
-    addMessage(`Title: ${data.title}`, 'agent');
-    status.textContent = 'Screenshot updated.';
+  if (data.type === 'status') {
+    addBubble(data.message, 'agent');
+  } else if (data.type === 'reply') {
+    addBubble(data.message, 'agent');
     if (data.screenshot) {
-      screenshot.src = `/screenshots/latest.png?${Date.now()}`;
-      screenshot.style.display = 'block';
+      addScreenshotBubble(data.screenshot, 'Screenshot');
     }
-  } else if (data.status === 'error') {
-    addMessage(`Error: ${data.error}`, 'agent');
-    status.textContent = 'Error occurred.';
-    screenshot.style.display = 'none';
+  } else if (data.type === 'error') {
+    addBubble('Error: ' + data.message, 'agent');
   }
 };
+
 ws.onopen = () => {
-  addMessage('Connected to browser agent.', 'agent');
-  status.textContent = 'Connected.';
+  addBubble('Connected to browser agent.', 'agent');
 };
 ws.onclose = () => {
-  addMessage('Disconnected.', 'agent');
-  status.textContent = 'Disconnected.';
-  screenshot.style.display = 'none';
+  addBubble('Disconnected.', 'agent');
 }; 

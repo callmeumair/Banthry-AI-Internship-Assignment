@@ -1,4 +1,2 @@
 fastapi
-uvicorn
-playwright
-websockets 
+uvicorn[standard] 

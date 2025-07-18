@@ -18,4 +18,4 @@ async def websocket_endpoint(websocket: WebSocket):
             except Exception as e:
                 await websocket.send_text(f"Error: {str(e)}")
     except WebSocketDisconnect:
-        await agent.close() 
+        await agent.close()

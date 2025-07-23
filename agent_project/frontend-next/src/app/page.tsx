@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import styles from "./page.module.css";
 
 interface Message {
@@ -13,10 +13,16 @@ export default function ChatPage() {
   const [status, setStatus] = useState("Disconnected");
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  useEffect(() => {
+  // Remove useEffect that auto-connects
+
+  const handleStartAutomation = () => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
     const eventSource = new EventSource("/api/events");
     eventSourceRef.current = eventSource;
 
+    setStatus("Connecting...");
     eventSource.onopen = () => setStatus("Connected");
     eventSource.onerror = () => setStatus("Disconnected");
     eventSource.onmessage = (event) => {
@@ -32,17 +38,16 @@ export default function ChatPage() {
         ]);
       } catch {}
     };
-
-    return () => {
-      eventSource.close();
-    };
-  }, []);
+  };
 
   return (
     <div className={styles.chatContainer}>
       <div className={styles.status}>
         Status: <span>{status}</span>
       </div>
+      <button onClick={handleStartAutomation} className={styles.startButton}>
+        Start Gmail Automation
+      </button>
       <div className={styles.messages}>
         {messages.map((msg, i) => (
           <div key={i} className={styles.bubble + " " + styles.agent}>

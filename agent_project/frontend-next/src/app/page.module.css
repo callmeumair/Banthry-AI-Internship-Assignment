@@ -165,3 +165,19 @@ a.secondary {
     filter: invert();
   }
 }
+
+.startButton {
+  margin: 16px 0;
+  padding: 10px 24px;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.startButton:hover {
+  background: #0059c1;
+}
